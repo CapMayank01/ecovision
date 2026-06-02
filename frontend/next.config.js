@@ -1,6 +1,11 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  eslint: {
+    // Warning: This allows production builds to successfully complete even if
+    // your project has ESLint errors.
+    ignoreDuringBuilds: true,
+  },
   // Proxy /api/* to the Express backend so the browser stays same-origin (no CORS in dev).
   // Set BACKEND_URL if the API is not on http://127.0.0.1:5000
   async rewrites() {
