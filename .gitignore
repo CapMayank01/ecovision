@@ -1,0 +1,40 @@
+node_modules/
+dist/
+.env
+
+# Environment & Secrets
+.env
+.env.*
+.my.cnf
+*.cnf
+
+# Logs & Debug
+*_errors.txt
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# TypeScript
+*.tsbuildinfo
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# IDEs/Editors
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp

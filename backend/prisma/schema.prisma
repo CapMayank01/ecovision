@@ -1,0 +1,165 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum RegionType {
+  forest
+  glacier
+  coastal
+  urban
+}
+
+enum SolutionType {
+  afforestation
+  urban_planning
+  glacier_protection
+  flood_management
+}
+
+enum PriorityLevel {
+  low
+  medium
+  high
+  critical
+}
+
+enum DataSourceType {
+  satellite
+  climate
+  geological
+  local
+}
+
+model Region {
+  regionId       Int              @id @default(autoincrement()) @map("region_id")
+  name           String           @db.VarChar(100)
+  type           RegionType
+  latitude       Float
+  longitude      Float
+  areaSqkm       Float            @map("area_sqkm")
+  description    String?          @db.Text
+  createdAt      DateTime         @default(now()) @map("created_at")
+  historicalData HistoricalData[]
+  predictionData PredictionData[]
+  regionSolutions RegionSolution[]
+  environmentalCauses EnvironmentalCause[]
+  landMarketData      LandMarketData[]
+  landPricePredictions LandPricePrediction[]
+
+  @@map("regions")
+}
+
+model EnvironmentalCause {
+  id          Int      @id @default(autoincrement())
+  regionId    Int      @map("region_id")
+  factorType  String   @map("factor_type") @db.VarChar(20) // "local", "seasonal", "global"
+  title       String   @db.VarChar(150)
+  description String   @db.Text
+  impactScore Float    @map("impact_score") // 0–100
+  createdAt   DateTime @default(now()) @map("created_at")
+  region      Region   @relation(fields: [regionId], references: [regionId])
+
+  @@map("environmental_causes")
+}
+
+model HistoricalData {
+  dataId            Int     @id @default(autoincrement()) @map("data_id")
+  regionId          Int     @map("region_id")
+  year              Int
+  forestCoverSqkm   Float?  @map("forest_cover_sqkm")
+  glacierAreaSqkm   Float?  @map("glacier_area_sqkm")
+  temperatureCelsius Float? @map("temperature_celsius")
+  precipitationMm   Float?  @map("precipitation_mm")
+  region            Region  @relation(fields: [regionId], references: [regionId])
+
+  @@unique([regionId, year])
+  @@map("historical_data")
+}
+
+model PredictionData {
+  predictionId      Int    @id @default(autoincrement()) @map("prediction_id")
+  regionId          Int    @map("region_id")
+  year              Int
+  forestCoverSqkm   Float? @map("forest_cover_sqkm")
+  glacierAreaSqkm   Float? @map("glacier_area_sqkm")
+  temperatureCelsius Float? @map("temperature_celsius")
+  precipitationMm   Float? @map("precipitation_mm")
+  confidenceLevel   Float? @map("confidence_level")
+  calculationMethod String @map("calculation_method") @db.VarChar(100)
+  region            Region @relation(fields: [regionId], references: [regionId])
+
+  @@unique([regionId, year, calculationMethod])
+  @@map("prediction_data")
+}
+
+model Solution {
+  solutionId          Int              @id @default(autoincrement()) @map("solution_id")
+  name                String           @db.VarChar(100)
+  type                SolutionType
+  description         String           @db.Text
+  implementationSteps String           @map("implementation_steps") @db.Text
+  expectedImpact      String           @map("expected_impact") @db.Text
+  regionSolutions     RegionSolution[]
+
+  @@map("solutions")
+}
+
+model RegionSolution {
+  regionSolutionId          Int           @id @default(autoincrement()) @map("region_solution_id")
+  regionId                  Int           @map("region_id")
+  solutionId                Int           @map("solution_id")
+  priorityLevel             PriorityLevel @map("priority_level")
+  estimatedCostUsd          Float?        @map("estimated_cost_usd")
+  estimatedImpactPercentage Float?        @map("estimated_impact_percentage")
+  region                    Region        @relation(fields: [regionId], references: [regionId])
+  solution                  Solution      @relation(fields: [solutionId], references: [solutionId])
+
+  @@unique([regionId, solutionId])
+  @@map("region_solutions")
+}
+
+model DataSource {
+  sourceId    Int            @id @default(autoincrement()) @map("source_id")
+  name        String         @db.VarChar(100)
+  url         String?        @db.VarChar(255)
+  description String?        @db.Text
+  dataType    DataSourceType @map("data_type")
+  lastUpdated DateTime       @default(now()) @updatedAt @map("last_updated")
+
+  @@map("data_sources")
+}
+
+model LandMarketData {
+  id                  Int    @id @default(autoincrement())
+  regionId            Int    @map("region_id")
+  year                Int
+  avgPricePerSqft     Float  @map("avg_price_per_sqft")
+  aqi                 Float?
+  greenCoverPercent   Float? @map("green_cover_percent")
+  waterQualityIndex   Float? @map("water_quality_index")
+  floodRiskScore      Float? @map("flood_risk_score")
+  industrialProximity Float? @map("industrial_proximity_km")
+  region              Region @relation(fields: [regionId], references: [regionId])
+
+  @@unique([regionId, year])
+  @@map("land_market_data")
+}
+
+model LandPricePrediction {
+  id                    Int    @id @default(autoincrement())
+  regionId              Int    @map("region_id")
+  year                  Int
+  predictedPricePerSqft Float  @map("predicted_price_per_sqft")
+  environmentalScore    Float  @map("environmental_score")
+  priceChangePercent    Float? @map("price_change_percent")
+  confidenceLevel       Float? @map("confidence_level")
+  region                Region @relation(fields: [regionId], references: [regionId])
+
+  @@unique([regionId, year])
+  @@map("land_price_predictions")
+}
