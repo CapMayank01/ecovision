@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import api from "../lib/api";
 
 export interface ForecastPoint {
   year:                  number;
@@ -14,8 +15,6 @@ export interface ForecastData {
   forecast: ForecastPoint[];
 }
 
-const BASE = "/api/ml";
-
 export function useMLForecast(regionId: number, landType = "Residential") {
   const [data,    setData]    = useState<ForecastData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -23,9 +22,10 @@ export function useMLForecast(regionId: number, landType = "Residential") {
   useEffect(() => {
     if (!regionId) return;
     setLoading(true); setError(null);
-    fetch(`${BASE}/${regionId}/forecast?landType=${landType}`)
-      .then(r => { if (!r.ok) throw new Error("Forecast fetch failed"); return r.json(); })
-      .then(setData).catch(e => setError(e.message)).finally(() => setLoading(false));
+    api.get(`/api/ml/${regionId}/forecast?landType=${landType}`)
+      .then(r => setData(r.data))
+      .catch(e => setError(e.response?.data?.error || e.message))
+      .finally(() => setLoading(false));
   }, [regionId, landType]);
   return { data, loading, error };
 }
@@ -37,9 +37,10 @@ export function useAllTypePrices(regionId: number) {
   useEffect(() => {
     if (!regionId) return;
     setLoading(true);
-    fetch(`${BASE}/${regionId}/all-types`)
-      .then(r => { if (!r.ok) throw new Error("All-types fetch failed"); return r.json(); })
-      .then(setData).catch(e => setError(e.message)).finally(() => setLoading(false));
+    api.get(`/api/ml/${regionId}/all-types`)
+      .then(r => setData(r.data))
+      .catch(e => setError(e.response?.data?.error || e.message))
+      .finally(() => setLoading(false));
   }, [regionId]);
   return { data, loading, error };
 }
